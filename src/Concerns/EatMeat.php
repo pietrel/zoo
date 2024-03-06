@@ -14,7 +14,5 @@ trait EatMeat
         } else {
             throw new FeedingError($food);
         }
-
-
     }
 }
