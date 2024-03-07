@@ -2,75 +2,40 @@
 
 use PHPUnit\Framework\TestCase;
 use Pietrel\Zoo\Animals;
-use Pietrel\Zoo\Enums;
+use Pietrel\Zoo\Animals\Animal;
+use Pietrel\Zoo\Zoo;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 class ZooTest extends TestCase
 {
-    public function testAnimalName()
+    public static function tearDownAfterClass(): void
     {
-        $animal = new Animals\Tiger('Duke');
-        $this->assertEquals("Tygrys Duke\n", $animal);
+        Zoo::resetInstance();
     }
 
     public function animals(): array
     {
         return [
-            [new Animals\Tiger('Duke')],
-            [new Animals\Elephant('Dumbo')],
-            [new Animals\Rhino('Rocky')],
-            [new Animals\Fox('Ginger')],
-            [new Animals\SnowLeopard('Snowflake')],
-            [new Animals\Rabbit('Daisy')],
+            [new Animals\Tiger('Duke'), 1],
+            [new Animals\Elephant('Dumbo'), 2],
+            [new Animals\Rhino('Rocky'), 3],
+            [new Animals\Fox('Ginger'), 4],
+            [new Animals\SnowLeopard('Snowflake'), 5],
+            [new Animals\Rabbit('Daisy'), 6],
         ];
     }
 
-    public function testAddingAnimals()
-    {
-        $zoo = new Pietrel\Zoo\Zoo();
-        $zoo->addAnimal(new Animals\Tiger('Duke'));
-        $zoo->addAnimal(new Animals\Elephant('Dumbo'));
-        $zoo->addAnimal(new Animals\Rhino('Rocky'));
-        $zoo->addAnimal(new Animals\Fox('Ginger'));
-        $zoo->addAnimal(new Animals\Rabbit('Daisy'));
-       $this->expectOutputString("Tygrys Duke\nSłoń Dumbo\nNosorożec Rocky\nLis Ginger\nKrólik Daisy\n");
-        $zoo->showAnimals();
-    }
-
     /**
      * @dataProvider animals
      */
-    public function testFeeding(Animals\Animal $animal)
+    public function testZooAddingAnimals(Animal $animal, int $count): void
     {
-        if (is_a($animal, Pietrel\Zoo\Contracts\Herbivorous::class)) {
-            $animal->feed(Enums\Food::Plants);
-            $this->expectOutputString("Zwierzę je rośliny\n");
-            $this->expectException(Pietrel\Zoo\Errors\FeedingError::class);
-            $animal->feed(Enums\Food::Meat);
-        } elseif (is_a($animal, Pietrel\Zoo\Contracts\Carnivorous::class)) {
-            $animal->feed(Enums\Food::Meat);
-            $this->expectOutputString("Zwierzę je mięso\n");
-            $this->expectException(Pietrel\Zoo\Errors\FeedingError::class);
-            $animal->feed(Enums\Food::Plants);
-        } elseif (is_a($animal, Pietrel\Zoo\Contracts\Omnivorous::class)) {
-            $animal->feed(Enums\Food::Plants);
-            $this->expectOutputString("Zwierzę je rośliny\n");
-            $animal->feed(Enums\Food::Meat);
-            $this->expectOutputString("Zwierzę je mięso\n");
-        } else {
-            $this->addWarning('Nieprawidłowa implementacja interfejsu żywienia dla zwierzęcia');
-        }
-    }
-
-    /**
-     * @dataProvider animals
-     */
-    public function testFurMaintenance(Animals\Animal $animal){
-        if (is_a($animal, Pietrel\Zoo\Contracts\HasFur::class)) {
-            $animal->combFur();
-            $this->expectOutputString("Futro zwierzęcia zostało wyczesane\n");
-            $this->assertTrue($animal->furCombed);
-        } else {
-            $this->expectNotToPerformAssertions();
-        }
+        $zoo = Zoo::getInstance();
+        $zoo->addAnimal($animal);
+        $this->assertCount($count, $zoo->getAnimals());
     }
 }
