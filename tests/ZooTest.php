@@ -2,8 +2,19 @@
 
 use PHPUnit\Framework\TestCase;
 use Pietrel\Zoo\Animals;
+use Pietrel\Zoo\Contracts\Carnivorous;
+use Pietrel\Zoo\Contracts\HasFur;
+use Pietrel\Zoo\Contracts\Herbivorous;
+use Pietrel\Zoo\Contracts\Omnivorous;
 use Pietrel\Zoo\Enums;
+use Pietrel\Zoo\Errors\FeedingError;
+use Pietrel\Zoo\Zoo;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 class ZooTest extends TestCase
 {
     public function testAnimalName()
@@ -26,13 +37,13 @@ class ZooTest extends TestCase
 
     public function testAddingAnimals()
     {
-        $zoo = new Pietrel\Zoo\Zoo();
+        $zoo = new Zoo();
         $zoo->addAnimal(new Animals\Tiger('Duke'));
         $zoo->addAnimal(new Animals\Elephant('Dumbo'));
         $zoo->addAnimal(new Animals\Rhino('Rocky'));
         $zoo->addAnimal(new Animals\Fox('Ginger'));
         $zoo->addAnimal(new Animals\Rabbit('Daisy'));
-       $this->expectOutputString("Tygrys Duke\nSłoń Dumbo\nNosorożec Rocky\nLis Ginger\nKrólik Daisy\n");
+        $this->expectOutputString("Tygrys Duke\nSłoń Dumbo\nNosorożec Rocky\nLis Ginger\nKrólik Daisy\n");
         $zoo->showAnimals();
     }
 
@@ -41,17 +52,17 @@ class ZooTest extends TestCase
      */
     public function testFeeding(Animals\Animal $animal)
     {
-        if (is_a($animal, Pietrel\Zoo\Contracts\Herbivorous::class)) {
+        if (is_a($animal, Herbivorous::class)) {
             $animal->feed(Enums\Food::Plants);
             $this->expectOutputString("Zwierzę je rośliny\n");
-            $this->expectException(Pietrel\Zoo\Errors\FeedingError::class);
+            $this->expectException(FeedingError::class);
             $animal->feed(Enums\Food::Meat);
-        } elseif (is_a($animal, Pietrel\Zoo\Contracts\Carnivorous::class)) {
+        } elseif (is_a($animal, Carnivorous::class)) {
             $animal->feed(Enums\Food::Meat);
             $this->expectOutputString("Zwierzę je mięso\n");
-            $this->expectException(Pietrel\Zoo\Errors\FeedingError::class);
+            $this->expectException(FeedingError::class);
             $animal->feed(Enums\Food::Plants);
-        } elseif (is_a($animal, Pietrel\Zoo\Contracts\Omnivorous::class)) {
+        } elseif (is_a($animal, Omnivorous::class)) {
             $animal->feed(Enums\Food::Plants);
             $this->expectOutputString("Zwierzę je rośliny\n");
             $animal->feed(Enums\Food::Meat);
@@ -64,8 +75,9 @@ class ZooTest extends TestCase
     /**
      * @dataProvider animals
      */
-    public function testFurMaintenance(Animals\Animal $animal){
-        if (is_a($animal, Pietrel\Zoo\Contracts\HasFur::class)) {
+    public function testFurMaintenance(Animals\Animal $animal)
+    {
+        if (is_a($animal, HasFur::class)) {
             $animal->combFur();
             $this->expectOutputString("Futro zwierzęcia zostało wyczesane\n");
             $this->assertTrue($animal->furCombed);
