@@ -1,0 +1,39 @@
+#!/bin/bash
+# This script is used to check PHP syntax and run PHP-CS-Fixer before pushing to remote.
+
+function error_exit
+{
+	LIGHT_RED='\033[1;31m'
+	DEFAULT='\033[0m' # No Color
+	echo -e "\n${LIGHT_RED}$1${DEFAULT}" 1>&2
+	exit 1
+}
+
+PROJECT="$(dirname -- "$(dirname -- "$(dirname -- "$(dirname -- "$(readlink -f -- "$0")")")")")"
+FILES=`git diff --name-status origin/main | grep -e '^[AM]\(.*\).php$' | cut -c 3- | tr '\n' ' '`
+
+echo "Checking PHP Lint..."
+for FILE in $FILES
+do
+	php -l -d display_errors=0 $FILE
+	if [ $? != 0 ]
+	then
+		error_exit "PHP Error in file: ${PROJECT}/${FILE} Fix the error before push."
+	fi
+done
+
+if [ "$FILES" != "" ]
+then
+	echo "Running PHP-CS-Fixer..."
+	./vendor/bin/php-cs-fixer fix --dry-run --diff -- $FILES
+	if [ $? != 0 ]
+	then
+		error_exit "Fix errors before push."
+	fi
+fi
+
+echo "Running PHPUnit..."
+./vendor/bin/phpunit
+
+# If the tests fail, the script will exit with a non-zero status
+exit $?
